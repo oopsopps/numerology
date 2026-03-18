@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>生命靈數測算 — 輸入生日算出你的命數九宮格</title>
+<meta name="description" content="免費生命靈數計算器。輸入西元生日，即時算出生命靈數、九宮格圈數、連線分析、能量解讀。支援手機安裝。">
+<meta name="theme-color" content="#8b5cf6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="生命靈數">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.json">
+<meta property="og:title" content="生命靈數測算">
+<meta property="og:description" content="輸入生日，算出你的生命靈數九宮格、連線與能量分析">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/icon-512.png">
+<style>
+  :root {
+    --bg: #0f0f14;
+    --card: #1a1a24;
+    --accent: #8b5cf6;
+    --accent2: #a78bfa;
+    --text: #e4e4e7;
+    --muted: #9ca3af;
+    --border: #2a2a3a;
+    --warn: #f59e0b;
+    --green: #22c55e;
+    --red: #ef4444;
+    --blue: #3b82f6;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', 'Noto Sans TC', sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+
+  /* === Calculator Page === */
+  .calc-container { max-width:1200px; margin:0 auto; padding:20px; }
+  .calc-header { text-align:center; padding:30px 0 20px; }
+  .calc-header h1 { font-size:2em; background:linear-gradient(135deg, var(--accent), #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .calc-header p { color:var(--muted); margin-top:6px; }
+
+  .calc-main { display:flex; gap:30px; align-items:flex-start; flex-wrap:wrap; justify-content:center; }
+
+  /* Grid panel */
+  .grid-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:30px; min-width:340px; }
+  .grid-panel h3 { color:var(--accent2); margin-bottom:16px; text-align:center; }
+
+  .grid-wrapper { position:relative; width:300px; height:300px; margin:0 auto; }
+  .grid-cell { position:absolute; width:80px; height:80px; display:flex; align-items:center; justify-content:center; font-size:1.8em; font-weight:700; color:var(--muted); transition:all .4s; }
+  .grid-cell.has-circle { color:var(--text); }
+  .grid-cell .circle-ring { position:absolute; width:74px; height:74px; border-radius:50%; border:3px solid var(--accent); opacity:0; transition:all .4s; }
+  .grid-cell.has-circle .circle-ring { opacity:1; }
+  .grid-cell .circle-count { position:absolute; bottom:2px; right:6px; font-size:0.4em; color:var(--accent2); opacity:0; }
+  .grid-cell.has-circle .circle-count { opacity:1; }
+  .grid-cell .score-label { position:absolute; top:2px; left:6px; font-size:0.35em; color:var(--warn); opacity:0; }
+  .grid-cell.has-circle .score-label { opacity:1; }
+
+  /* Connection lines via SVG */
+  .grid-svg { position:absolute; top:0; left:0; width:300px; height:300px; pointer-events:none; }
+  .conn-line { stroke:var(--accent); stroke-width:2.5; stroke-dasharray:6,4; opacity:0; transition:opacity .5s; fill:none; }
+  .conn-line.active { opacity:0.7; }
+
+  /* Input panel */
+  .input-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:30px; min-width:320px; max-width:400px; }
+  .input-panel h3 { color:var(--accent2); margin-bottom:16px; }
+  .input-row { display:flex; gap:10px; margin-bottom:16px; }
+  .input-group { flex:1; }
+  .input-group label { display:block; font-size:0.85em; color:var(--muted); margin-bottom:4px; }
+  .input-group input, .input-group select { width:100%; padding:10px 12px; background:#12121a; border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:1em; }
+  .input-group input:focus, .input-group select:focus { outline:none; border-color:var(--accent); }
+  .btn-calc { width:100%; padding:14px; background:linear-gradient(135deg, var(--accent), #7c3aed); border:none; border-radius:10px; color:#fff; font-size:1.1em; font-weight:600; cursor:pointer; transition:all .2s; margin-top:8px; }
+  .btn-calc:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(139,92,246,0.4); }
+  .btn-calc:active { transform:translateY(0); }
+
+  .info-box { margin-top:16px; padding:14px; background:rgba(139,92,246,0.08); border-radius:10px; font-size:0.9em; }
+  .info-box .info-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .info-box .info-row:last-child { border-bottom:none; }
+  .info-label { color:var(--muted); }
+  .info-value { font-weight:600; color:var(--accent2); }
+
+  /* Score legend */
+  .score-legend { margin-top:16px; font-size:0.82em; color:var(--muted); }
+  .score-legend table { width:100%; border-collapse:collapse; margin-top:6px; }
+  .score-legend th, .score-legend td { padding:4px 8px; border:1px solid var(--border); text-align:center; font-size:0.9em; }
+  .score-legend th { background:var(--accent); color:#fff; }
+
+  /* Connections list */
+  .conn-list { margin-top:16px; }
+  .conn-tag { display:inline-block; padding:3px 10px; margin:3px; border-radius:20px; font-size:0.82em; background:rgba(139,92,246,0.15); color:var(--accent2); border:1px solid rgba(139,92,246,0.3); }
+  .conn-tag.inactive { background:transparent; color:var(--muted); border-color:var(--border); opacity:0.5; }
+
+  /* === Analysis Section === */
+  .analysis-section { max-width:1200px; margin:30px auto; padding:0 20px; }
+  .analysis-section h2 { font-size:1.5em; padding:12px 18px; background:linear-gradient(90deg, var(--accent), transparent); border-radius:8px; margin-bottom:20px; }
+  .analysis-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:16px; }
+  .analysis-card h3 { color:var(--accent2); margin-bottom:10px; font-size:1.15em; }
+  .analysis-card h4 { color:#d4d4d8; margin:12px 0 6px; font-size:1em; }
+  .energy-table { width:100%; border-collapse:collapse; margin:8px 0; }
+  .energy-table th, .energy-table td { padding:8px 12px; border:1px solid var(--border); text-align:left; font-size:0.92em; }
+  .energy-table th { background:var(--accent); color:#fff; }
+  .energy-empty { background:rgba(59,130,246,0.1); }
+  .energy-ok { background:rgba(34,197,94,0.1); }
+  .energy-excess { background:rgba(239,68,68,0.1); }
+  .tag { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.8em; margin:2px; }
+  .tag-pos { background:#065f46; color:#6ee7b7; }
+  .tag-neg { background:#7f1d1d; color:#fca5a5; }
+  .num-badge { display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; border-radius:50%; background:var(--accent); color:#fff; font-weight:700; font-size:1em; margin-right:6px; }
+
+  .hidden { display:none !important; }
+
+  /* Responsive */
+  @media(max-width:750px) {
+    .calc-main { flex-direction:column; align-items:center; }
+    .grid-panel, .input-panel { min-width:auto; width:100%; max-width:400px; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ==================== 測算頁 ==================== -->
+<div id="tab-calc">
+  <div class="calc-container">
+    <div class="calc-header">
+      <h1>生命靈數測算</h1>
+      <p>輸入西元生日，計算你的生命靈數九宮格</p>
+    </div>
+
+    <div class="calc-main">
+      <!-- 左：九宮格 -->
+      <div class="grid-panel">
+        <h3>九宮格</h3>
+        <div class="grid-wrapper" id="gridWrapper">
+          <svg class="grid-svg" id="gridSvg" viewBox="0 0 300 300"></svg>
+          <!-- Cells will be generated by JS -->
+        </div>
+        <div class="conn-list" id="connList"></div>
+      </div>
+
+      <!-- 右：輸入 -->
+      <div class="input-panel">
+        <h3>輸入生日</h3>
+        <div class="input-row">
+          <div class="input-group">
+            <label>西元年</label>
+            <input type="number" id="inputYear" min="1900" max="2050" placeholder="1984">
+          </div>
+          <div class="input-group">
+            <label>月</label>
+            <select id="inputMonth">
+              <option value="">--</option>
+              <script>for(let i=1;i<=12;i++)document.write('<option value="'+i+'">'+i+'月</option>');</script>
+            </select>
+          </div>
+          <div class="input-group">
+            <label>日</label>
+            <select id="inputDay">
+              <option value="">--</option>
+              <script>for(let i=1;i<=31;i++)document.write('<option value="'+i+'">'+i+'日</option>');</script>
+            </select>
+          </div>
+        </div>
+        <button class="btn-calc" onclick="calculate()">測算</button>
+
+        <div class="info-box hidden" id="infoBox">
+          <div class="info-row"><span class="info-label">生命靈數（主命數）</span><span class="info-value" id="infoLife">-</span></div>
+          <div class="info-row"><span class="info-label">天賦數</span><span class="info-value" id="infoTalent">-</span></div>
+          <div class="info-row"><span class="info-label">星座數</span><span class="info-value" id="infoZodiac">-</span></div>
+          <div class="info-row"><span class="info-label">固定數（生日數）</span><span class="info-value" id="infoFixed">-</span></div>
+          <div class="info-row"><span class="info-label">九宮格來源</span><span class="info-value" style="font-size:0.8em" id="infoSources">-</span></div>
+        </div>
+
+        <div class="score-legend hidden" id="scoreLegend">
+          <strong>計分表</strong>
+          <table>
+            <tr><th>來源</th><th>分數</th></tr>
+            <tr><td>先天×1</td><td>30分</td></tr>
+            <tr><td>先天×2</td><td>60分</td></tr>
+            <tr><td>先天×3</td><td>100分</td></tr>
+            <tr><td>主命數 ①</td><td>100分</td></tr>
+            <tr><td>星座數 ☆</td><td>70分</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis results -->
+  <div class="analysis-section hidden" id="analysisSection">
+    <h2>分析結果</h2>
+    <div id="analysisContent"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA: Number interpretations from spec
+// ============================================================
+const NUM_DATA = {
+  1: {
+    name: "創始數", alias: "創始數",
+    pos: ["自信","獨立","勇敢","果斷","可被信任"],
+    neg: ["愛說教","偏執","自我","冷酷","強硬","忌妒"],
+    fear: "沒面子、不被重視、不如其他人、被當成配角。",
+    core: "努力「證明」和「追求」自己可以。喜歡別人依賴和認同自己的想法。",
+    love: "渴望擔任「主導者」角色，散發領導才能，容易成為照顧者。",
+    advice: "接納自己的一切，特別是「不好」的部分。自信不用證明給他人看。",
+    energy: {
+      empty: "過度依賴、血液循環不好、優柔寡斷、理解障礙、立場不堅定",
+      ok: "認真、專注、獨立、果斷、自信、勇敢、有想法",
+      excess: "偏執、自私、支配慾過強、固執自卑、強勢到令人難以親近"
+    },
+    crystal: "石榴石", chakra: "海底輪", color: "#ef4444", colorName: "紅色",
+    soul: "建立自信，不過度依賴他人或外在條件",
+    comm: "重視效率和清晰度，希望馬上聽到重點和好處。提前準備內容，展現自信度。"
+  },
+  2: {
+    name: "平衡數", alias: "平衡數",
+    pos: ["耐心","寬容","優雅","配合度高","有藝術感","可靠"],
+    neg: ["左右不定","容易抱怨","無主見","缺乏獨立性"],
+    fear: "被孤立的獨處、要自己做決定、沒有依靠。",
+    core: "期待成為人緣資優生，避免與人口角及衝突。非常在意別人對自己的評價。",
+    love: "合群、協調，有成就他人的胸襟，願意擔任感情中的協調者。",
+    advice: "練習有底氣，練習吵架。真朋友能接受你說出自己的看法。",
+    energy: {
+      empty: "溝通障礙、覺得講話很煩、冷漠、不願互動、真假不分",
+      ok: "分析、口才、熱心、細緻、耐心、寬容、有藝術感",
+      excess: "過度依賴、抱怨、過於敏感、太在乎外表、享受心重、奢侈"
+    },
+    crystal: "太陽石", chakra: "臍輪", color: "#f97316", colorName: "橙色",
+    soul: "學會平衡，不過度在意他人看法",
+    comm: "具同理心和耐心，非常看重態度和誠意。以真誠友善語氣表達。"
+  },
+  3: {
+    name: "創意數", alias: "創意數",
+    pos: ["聰明","熱情","幽默感","有創意","擅於表達"],
+    neg: ["誇張","逃避現實","缺乏方向","虎頭蛇尾"],
+    fear: "被限制、害怕無聊、面對現實、不被關注。",
+    core: "喜歡收集最新事物，藉由吸收新資訊獲得成就感。社交好手，擅長察言觀色。",
+    love: "充滿想像力和幽默感，受不了一成不變。需要保有彈性和不設限未來。",
+    advice: "在眾多興趣中找到長期深耕的專長。練習分配熱情，多把關注力放在自己身上。",
+    energy: {
+      empty: "朋友少、沒偏財運、個性不活潑、自以為是、社恐症、面無表情",
+      ok: "找樂子、創意、自由、愛交友、資源多、聰明、熱情、幽默",
+      excess: "任性、幼稚、容易分心、傷財、善離間、逃避現實"
+    },
+    crystal: "黃水晶", chakra: "太陽神經叢", color: "#eab308", colorName: "黃色",
+    soul: "表達自我，不只顧著迎合他人",
+    comm: "充滿活力、外向善於表達，喜歡視覺化資訊。先展示獨特創意或有趣話題。"
+  },
+  4: {
+    name: "執行數", alias: "執行數",
+    pos: ["實際","誠懇","做事認真","預防未來","管控風險","邏輯分明"],
+    neg: ["過於謹慎","拒絕改變","缺乏趣味"],
+    fear: "不穩定、變化多端、無法預測的危機。",
+    core: "維持一切穩定度，降低風險，享受一步一腳印累積能量的過程。",
+    love: "安全感極強，對自己要求高，一段感情要很踏實、穩定正常。",
+    advice: "增加閱歷和經驗來降低不安全感。發揮堅持和細心的特色在對的領域。",
+    energy: {
+      empty: "沒原則、錢存不住、缺乏安全感、想法變來變去、三分鐘熱度",
+      ok: "原則、務實、會組織、財庫、邏輯分明、做事認真",
+      excess: "吝嗇、過於謹慎、心胸狹窄、強迫症、拒絕改變"
+    },
+    crystal: "綠髮晶", chakra: "心輪", color: "#22c55e", colorName: "綠色",
+    soul: "勇於行動實現理想，不被過分謹慎限制",
+    comm: "重視資訊真實度、深度和細節，不喜歡膚淺社交。準備具體例子或數據支持觀點。"
+  },
+  5: {
+    name: "藝術數", alias: "藝術數",
+    pos: ["冒險精神","說服能力強","隨遇而安","堅持自我"],
+    neg: ["衝動","善變","偏執"],
+    fear: "被限制、要求、紀律、教條讓生活了無生趣。",
+    core: "像變色龍般隨心情和環境變化，但改變必須出自自己的主導意願。",
+    love: "天生散發光芒，在人群中成為焦點。空間和自由特別重要。",
+    advice: "適當表達核心目標和底線標準，也要承擔選擇後果。",
+    energy: {
+      empty: "保守、未來沒有方向、很不會聊天、很會拖延、空有想法但缺乏行動力",
+      ok: "人際關係佳、公關、同理心、行動力強、適應力強、冒險精神",
+      excess: "放縱、叛逆、懶惰、不負責、善變、談話沒重點"
+    },
+    crystal: "海藍寶", chakra: "喉輪", color: "#3b82f6", colorName: "藍色",
+    soul: "保持開放，接受不同的可能",
+    comm: "好奇心強，喜歡新鮮刺激，主動學習新資訊。準備有趣或不尋常的話題。"
+  },
+  6: {
+    name: "奉獻數", alias: "奉獻數",
+    pos: ["體貼","有同情心","公正","顧家","溫暖"],
+    neg: ["挑剔","保守","得失心重","愛念"],
+    fear: "自己沒有價值、付出沒有回報。",
+    core: "先付出愛，但內心渴望真心的回報。重承諾和責任。",
+    love: "標準甜膩型戀人，渴望穩定互相理解的愛情。",
+    advice: "不要用SOP和KPI來判斷親密關係。所有人善惡一體，不需為所有人負責。",
+    energy: {
+      empty: "不懂包容、賺無氣、說話太直接、不太會做人、誇獎差",
+      ok: "責任感、包容心、善解人意、體貼、公正、顧家、溫暖",
+      excess: "壓抑、偏愛、愛多管閒事、不能忍、挑剔、得失心重"
+    },
+    crystal: "青金石／紫水晶", chakra: "眉心輪", color: "#6366f1", colorName: "靛藍色",
+    soul: "找到內在平靜，不過分在意外在",
+    comm: "溫暖體貼有責任感，重視和諧穩定和公平。展現實用性和可行性。"
+  },
+  7: {
+    name: "幸運數", alias: "幸運數",
+    pos: ["藝術氣質","神秘","幸運","直覺力強","有智慧"],
+    neg: ["冷漠","孤僻","疑心重"],
+    fear: "自己犯錯、無知、被欺騙。",
+    core: "喜歡安靜，有點羞澀。先保持距離再觀察，想好關係拿捏後才交流。",
+    love: "多樣化興趣，希望成為另一半交流和討論的對象。",
+    advice: "學會團隊分工，放大自己的專長。心可以容納多大的未知面比知識量更重要。",
+    energy: {
+      empty: "沒緣、運氣特差、自以為聰明、做事不經過大腦、睡眠問題、機會來了而無法把握",
+      ok: "好奇心、理財、好運、有忠誠度、藝術氣質、直覺力強、有智慧",
+      excess: "疑心病重、孤僻、剛愎自用、製造緊張、冷漠"
+    },
+    crystal: "紫水晶／白水晶", chakra: "頂輪", color: "#a855f7", colorName: "紫色",
+    soul: "活在當下，不被過去或未來束縛",
+    comm: "重視知識和深度交流，不喜歡嬉鬧忽悠方式。確認真實性後再分享。"
+  },
+  8: {
+    name: "因果數", alias: "因果數",
+    pos: ["專注","能屈能伸","洞察力","成功","創造財富"],
+    neg: ["急於成功","操控慾望高","需要權力"],
+    fear: "失敗、貧窮、平庸、失去威望。",
+    core: "掌握一切才覺得踏實，經由支配細節來得到安全感。錢是重要安全感來源。",
+    love: "自帶獨立性格，常掩飾真正感受。冷漠外表下藏著澎湃情感。",
+    advice: "把失敗當成走向成功的方法之一。每天比前一天進步就是最偉大的成功。",
+    energy: {
+      empty: "沒主觀念、天生沒自信、沒主見、賺錢能力差、沒魄力、容易被煽動或洗腦",
+      ok: "創業、掌控欲適度、自我風格、專注、能屈能伸、洞察力、創造財富",
+      excess: "愛錢、唯利是圖、勢利、控制欲過強、愛面子、排除他議"
+    },
+    crystal: "鈦晶／粉水晶", chakra: "靈魂之星", color: "#d4a017", colorName: "金色",
+    soul: "學會分享給予，不只考慮自我",
+    comm: "重視效率成果和權威，喜歡直接簡潔溝通。強調具體效果和數據。"
+  },
+  9: {
+    name: "大愛數", alias: "大愛數",
+    pos: ["熱心公益","慈悲","利人","正義感","浪漫","博愛"],
+    neg: ["愛心氾濫","不懂拒絕","不切實際","懶惰"],
+    fear: "不被需要。",
+    core: "是否被在乎的人需要，成為自我價值的判定。義不容辭為他人服務。",
+    love: "天生的信徒，心中必須有信念和信仰。物質和精神靈性都要匹配才能認定對方。",
+    advice: "多把自己放在他人前面，先想「我」後想「他」。不想不能不願意就直接說。",
+    energy: {
+      empty: "不懂付出、人緣較差、沒有大愛、頭腦少根筋、敏銳和觀察力差、自我",
+      ok: "理想願景、大愛、直覺強、熱心公益、慈悲、正義感、博愛",
+      excess: "無原則、不務實、迷信、濫好人、善於批評、八卦、不切實際"
+    },
+    crystal: "月光石／白水晶", chakra: "星系門戶", color: "#d4d4d8", colorName: "白色",
+    soul: "寬恕接納，不過分批判自我和他人",
+    comm: "包容理解博愛，開放接納的態度看待不同觀點。強調對大眾與環境的幫助。"
+  }
+};
+
+// Connection lines data
+const CONNECTIONS = {
+  "147": { name: "執行力／務實線", nums: [1,4,7], desc: "天生充滿行動力，與生俱來的生存本能讓執行能力高於他人。追求穩定金錢來源和豐沃財富累積。" },
+  "258": { name: "心智力線", nums: [2,5,8], desc: "天生擅長且勇於表達內心想法，具備堅強心智。天生擁有極佳文字和表達能力，良好藝術感受能力。" },
+  "369": { name: "創意力／智慧線", nums: [3,6,9], desc: "具有靈性本質，除智慧外更有深層思考能力和善良本質。擅長用不同切角觀察和闡述事情。" },
+  "123": { name: "藝術力線", nums: [1,2,3], desc: "對新資訊接受度高，對美和藝術的感知力豐沛。感官性的生物，在嘗鮮過程中產生滿足感。" },
+  "456": { name: "組織規劃力線", nums: [4,5,6], desc: "執行力高、做事井然有序、善於統籌和計畫。善解人意，善於解決問題。" },
+  "789": { name: "貴人與財務管理力／權力線", nums: [7,8,9], desc: "擁有掌控周遭人的力量，容易成為領頭羊，充滿魅力，貴人相助頻繁。" },
+  "357": { name: "好人緣／溝通線", nums: [3,5,7], desc: "面面俱到、八面玲瓏。散發旁人沒有的魅力，大膽表達想法，在藝術、銷售、政治領域會是佼佼者。" },
+  "159": { name: "堅持力／事業線", nums: [1,5,9], desc: "執行能力強，但前提是必須有熱情和興趣。一旦決定就不在乎成本一股腦做到底。" },
+  "42":  { name: "靈巧線", nums: [4,2], desc: "精簡和優化能力。反應快、不拖泥帶水、高學習能力。非常不喜歡浪費時間。" },
+  "48":  { name: "勤勞線", nums: [4,8], desc: "閒不下來的特質。享受時間被塞滿，財務上穩紮穩打投資，風險低且穩健。" },
+  "62":  { name: "和平／暖心線", nums: [6,2], desc: "暖心和體貼特質。報喜不報憂，用雲淡風輕態度分享悲傷事。希望創造正能量氛圍。" },
+  "68":  { name: "誠實線", nums: [6,8], desc: "積極上進且在意他人看法。不喜歡被誤解，非常真實誠實。對認定的人特別好。" }
+};
+
+// Grid position map (vertical layout: 1,4,7 / 2,5,8 / 3,6,9)
+// row, col -> pixel position in 300x300
+const GRID_POS = {};
+const LAYOUT = [[1,4,7],[2,5,8],[3,6,9]];
+LAYOUT.forEach((row, r) => {
+  row.forEach((num, c) => {
+    GRID_POS[num] = { x: 40 + c * 110, y: 40 + r * 110 };
+  });
+});
+
+// ============================================================
+// ZODIAC
+// ============================================================
+function getZodiac(m, d) {
+  if ((m==12&&d>=22)||(m==1&&d<=19)) return {num:1, name:"摩羯座"};
+  if ((m==1&&d>=20)||(m==2&&d<=18)) return {num:2, name:"水瓶座"};
+  if ((m==2&&d>=19)||(m==3&&d<=20)) return {num:3, name:"雙魚座"};
+  if ((m==3&&d>=21)||(m==4&&d<=19)) return {num:1, name:"牡羊座"};
+  if ((m==4&&d>=20)||(m==5&&d<=20)) return {num:2, name:"金牛座"};
+  if ((m==5&&d>=21)||(m==6&&d<=20)) return {num:3, name:"雙子座"};
+  if ((m==6&&d>=21)||(m==7&&d<=22)) return {num:4, name:"巨蟹座"};
+  if ((m==7&&d>=23)||(m==8&&d<=22)) return {num:5, name:"獅子座"};
+  if ((m==8&&d>=23)||(m==9&&d<=22)) return {num:6, name:"處女座"};
+  if ((m==9&&d>=23)||(m==10&&d<=22)) return {num:7, name:"天秤座"};
+  if ((m==10&&d>=23)||(m==11&&d<=21)) return {num:8, name:"天蠍座"};
+  if ((m==11&&d>=22)||(m==12&&d<=21)) return {num:9, name:"射手座"};
+  return {num:0, name:"?"};
+}
+
+// ============================================================
+// INIT GRID VISUALS
+// ============================================================
+function initGrid() {
+  const wrapper = document.getElementById('gridWrapper');
+  // Create cells
+  for (let num = 1; num <= 9; num++) {
+    const pos = GRID_POS[num];
+    const cell = document.createElement('div');
+    cell.className = 'grid-cell';
+    cell.id = 'cell-' + num;
+    cell.style.left = (pos.x - 40) + 'px';
+    cell.style.top = (pos.y - 40) + 'px';
+    cell.innerHTML = '<div class="circle-ring"></div><span class="cell-num">' + num + '</span><span class="circle-count" id="count-' + num + '"></span><span class="score-label" id="score-' + num + '"></span>';
+    wrapper.appendChild(cell);
+  }
+
+  // Create SVG lines (hidden by default)
+  const svg = document.getElementById('gridSvg');
+  for (const [key, conn] of Object.entries(CONNECTIONS)) {
+    const nums = conn.nums;
+    const points = nums.map(n => GRID_POS[n]);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    if (nums.length === 2) {
+      line.setAttribute('x1', points[0].x); line.setAttribute('y1', points[0].y);
+      line.setAttribute('x2', points[1].x); line.setAttribute('y2', points[1].y);
+    } else {
+      // For 3-number lines, create a polyline
+    }
+    // Use polyline for all
+    const pl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    pl.setAttribute('points', points.map(p => p.x + ',' + p.y).join(' '));
+    pl.setAttribute('class', 'conn-line');
+    pl.id = 'line-' + key;
+    svg.appendChild(pl);
+  }
+}
+
+// ============================================================
+// CALCULATE
+// ============================================================
+function calculate() {
+  const year = parseInt(document.getElementById('inputYear').value);
+  const month = parseInt(document.getElementById('inputMonth').value);
+  const day = parseInt(document.getElementById('inputDay').value);
+
+  if (!year || !month || !day || year < 1900 || year > 2050) {
+    alert('請輸入有效的西元生日（1900-2050）');
+    return;
+  }
+
+  // Validate date
+  const testDate = new Date(year, month - 1, day);
+  if (testDate.getFullYear() !== year || testDate.getMonth() !== month - 1 || testDate.getDate() !== day) {
+    alert('日期無效，請確認月份和日期');
+    return;
+  }
+
+  const ds = String(year).padStart(4,'0') + String(month).padStart(2,'0') + String(day).padStart(2,'0');
+  const digits = ds.split('').map(Number);
+
+  // 1. Innate numbers
+  const innate = digits.filter(d => d !== 0);
+  const innateCounts = {};
+  innate.forEach(d => { innateCounts[d] = (innateCounts[d] || 0) + 1; });
+
+  // 2. Life path
+  let total = digits.reduce((a,b) => a+b, 0);
+  let chain = [total];
+  let t = total;
+  while (t > 9) {
+    if ([11,22,33,44].includes(t)) break;
+    t = String(t).split('').map(Number).reduce((a,b) => a+b, 0);
+    chain.push(t);
+  }
+  const lifeNumber = chain[chain.length - 1];
+  const isMaster = [11,22,33,44].includes(lifeNumber);
+
+  // 3. Talent number (for display only, NOT in grid)
+  let talentNum = null;
+  if (chain[0] >= 10 && chain[0] <= 99 && ![11,22,33,44].includes(chain[0])) {
+    talentNum = chain[0];
+  } else if (chain.length > 1 && chain[0] > 99) {
+    // Find first two-digit non-master
+    for (let i = 0; i < chain.length; i++) {
+      if (chain[i] >= 10 && chain[i] <= 99 && ![11,22,33,44].includes(chain[i])) {
+        talentNum = chain[i]; break;
+      }
+    }
+  }
+
+  // 4. Zodiac
+  const zodiac = getZodiac(month, day);
+
+  // 5. Fixed number
+  const fixedDigits = (String(month).padStart(2,'0') + String(day).padStart(2,'0')).split('').map(Number);
+  let fixedTotal = fixedDigits.reduce((a,b) => a+b, 0);
+  while (fixedTotal > 9) {
+    fixedTotal = String(fixedTotal).split('').map(Number).reduce((a,b) => a+b, 0);
+  }
+
+  // 6. Grid circles (innate + life/master + zodiac ONLY)
+  const circles = {};
+  const sources = {};
+  for (let i = 1; i <= 9; i++) { circles[i] = 0; sources[i] = []; }
+
+  // Innate
+  innate.forEach(d => { circles[d]++; sources[d].push('先天'); });
+
+  // Life path / Master
+  if (isMaster) {
+    const md = Math.floor(lifeNumber / 10);
+    circles[md] += 2;
+    sources[md].push('大師數' + lifeNumber);
+  } else {
+    circles[lifeNumber]++;
+    sources[lifeNumber].push('主命數');
+  }
+
+  // Zodiac
+  circles[zodiac.num]++;
+  sources[zodiac.num].push('星座');
+
+  // 7. Calculate scores
+  const scoreMap = {1: 30, 2: 60, 3: 100};
+  const scores = {};
+  for (let i = 1; i <= 9; i++) {
+    let s = 0;
+    const ic = innateCounts[i] || 0;
+    if (ic > 0) s += scoreMap[Math.min(ic, 3)] || (ic * 30);
+    if (isMaster && i === Math.floor(lifeNumber / 10)) s += 100;
+    if (!isMaster && i === lifeNumber) s += 100;
+    if (i === zodiac.num) s += 70;
+    scores[i] = s;
+  }
+
+  // 8. Check connections
+  const activeConns = [];
+  for (const [key, conn] of Object.entries(CONNECTIONS)) {
+    if (conn.nums.every(n => circles[n] > 0)) {
+      activeConns.push(key);
+    }
+  }
+
+  // === UPDATE UI ===
+  updateGrid(circles, scores, activeConns);
+  updateInfo(lifeNumber, isMaster, talentNum, zodiac, fixedTotal, sources);
+  updateConnList(activeConns);
+  updateAnalysis(circles, sources, scores, lifeNumber, isMaster, zodiac, fixedTotal, activeConns);
+}
+
+function updateGrid(circles, scores, activeConns) {
+  for (let i = 1; i <= 9; i++) {
+    const cell = document.getElementById('cell-' + i);
+    const countEl = document.getElementById('count-' + i);
+    const scoreEl = document.getElementById('score-' + i);
+
+    if (circles[i] > 0) {
+      cell.classList.add('has-circle');
+      countEl.textContent = '×' + circles[i];
+      scoreEl.textContent = scores[i] + '分';
+      // Multiple circles: add extra rings
+      cell.querySelectorAll('.extra-ring').forEach(r => r.remove());
+      for (let r = 1; r < circles[i]; r++) {
+        const ring = document.createElement('div');
+        ring.className = 'circle-ring extra-ring';
+        ring.style.width = (74 + r * 12) + 'px';
+        ring.style.height = (74 + r * 12) + 'px';
+        ring.style.opacity = '1';
+        ring.style.borderColor = 'rgba(139,92,246,' + (0.7 - r * 0.15) + ')';
+        ring.style.position = 'absolute';
+        ring.style.left = '50%';
+        ring.style.top = '50%';
+        ring.style.transform = 'translate(-50%, -50%)';
+        ring.style.borderRadius = '50%';
+        ring.style.border = '2px solid';
+        cell.appendChild(ring);
+      }
+    } else {
+      cell.classList.remove('has-circle');
+      countEl.textContent = '';
+      scoreEl.textContent = '';
+      cell.querySelectorAll('.extra-ring').forEach(r => r.remove());
+    }
+  }
+
+  // Lines
+  for (const key of Object.keys(CONNECTIONS)) {
+    const line = document.getElementById('line-' + key);
+    if (line) {
+      line.classList.toggle('active', activeConns.includes(key));
+    }
+  }
+}
+
+function updateInfo(life, isMaster, talent, zodiac, fixed, sources) {
+  document.getElementById('infoBox').classList.remove('hidden');
+  document.getElementById('scoreLegend').classList.remove('hidden');
+
+  document.getElementById('infoLife').textContent = isMaster ? life + '（大師數）' : life + '號人 — ' + NUM_DATA[life].name;
+
+  if (talent) {
+    const t1 = Math.floor(talent / 10), t2 = talent % 10;
+    document.getElementById('infoTalent').textContent = talent + ' → ' + t1 + ' 和 ' + t2 + '（不填入九宮格）';
+  } else {
+    document.getElementById('infoTalent').textContent = isMaster ? '（大師數，無獨立天賦數）' : '—';
+  }
+
+  document.getElementById('infoZodiac').textContent = zodiac.name + ' → ' + zodiac.num;
+  document.getElementById('infoFixed').textContent = fixed;
+
+  // Sources summary
+  const srcParts = [];
+  srcParts.push('先天數');
+  srcParts.push(isMaster ? '大師數' + life : '主命數' + life);
+  srcParts.push('星座' + zodiac.num);
+  document.getElementById('infoSources').textContent = srcParts.join(' + ');
+}
+
+function updateConnList(activeConns) {
+  const list = document.getElementById('connList');
+  let html = '<div style="margin-top:8px;font-size:0.85em;color:var(--muted);">連線：</div>';
+  for (const [key, conn] of Object.entries(CONNECTIONS)) {
+    const isActive = activeConns.includes(key);
+    html += '<span class="conn-tag ' + (isActive ? '' : 'inactive') + '">' + key + ' ' + conn.name + '</span>';
+  }
+  list.innerHTML = html;
+}
+
+function updateAnalysis(circles, sources, scores, lifeNumber, isMaster, zodiac, fixed, activeConns) {
+  const section = document.getElementById('analysisSection');
+  section.classList.remove('hidden');
+  const content = document.getElementById('analysisContent');
+  let html = '';
+
+  // Life path number interpretation
+  const lifeNum = isMaster ? Math.floor(lifeNumber / 10) : lifeNumber;
+  const lifeData = NUM_DATA[lifeNum];
+
+  html += '<div class="analysis-card">';
+  html += '<h3><span class="num-badge">' + (isMaster ? lifeNumber : lifeNum) + '</span>你的生命靈數：' + (isMaster ? lifeNumber + '（大師數）— 擁有雙倍 ' + lifeNum + ' 號能量' : lifeNum + '號人 —「' + lifeData.name + '」') + '</h3>';
+  html += '<p>' + lifeData.core + '</p>';
+  html += '<h4>正面特質</h4><p>' + lifeData.pos.map(t => '<span class="tag tag-pos">' + t + '</span>').join('') + '</p>';
+  html += '<h4>負面特質</h4><p>' + lifeData.neg.map(t => '<span class="tag tag-neg">' + t + '</span>').join('') + '</p>';
+  html += '<h4>內在恐懼</h4><p>' + lifeData.fear + '</p>';
+  html += '<h4>感情觀</h4><p>' + lifeData.love + '</p>';
+  html += '<h4>建議</h4><p>' + lifeData.advice + '</p>';
+  html += '</div>';
+
+  // Each number's energy level
+  html += '<div class="analysis-card">';
+  html += '<h3>九宮格各數字能量分析</h3>';
+  html += '<table class="energy-table"><tr><th>數字</th><th>圈數</th><th>狀態</th><th>表現</th></tr>';
+  for (let i = 1; i <= 9; i++) {
+    const c = circles[i];
+    const d = NUM_DATA[i];
+    let level, cls, desc;
+    if (c === 0) { level = '空缺'; cls = 'energy-empty'; desc = d.energy.empty; }
+    else if (c <= 3) { level = '適量 (' + c + '圈)'; cls = 'energy-ok'; desc = d.energy.ok; }
+    else { level = '過多 (' + c + '圈)'; cls = 'energy-excess'; desc = d.energy.excess; }
+    html += '<tr class="' + cls + '"><td><strong>' + i + '號</strong> ' + d.name + '</td><td>' + c + '</td><td>' + level + '</td><td>' + desc + '</td></tr>';
+  }
+  html += '</table>';
+  html += '</div>';
+
+  // Active connections
+  if (activeConns.length > 0) {
+    html += '<div class="analysis-card">';
+    html += '<h3>你的連線（共 ' + activeConns.length + ' 條）</h3>';
+    for (const key of activeConns) {
+      const conn = CONNECTIONS[key];
+      html += '<h4>' + key + ' ' + conn.name + '</h4>';
+      html += '<p>' + conn.desc + '</p>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="analysis-card"><h3>連線</h3><p>你的九宮格沒有形成連線。這只表示某些特質不會特別外顯，不代表比較弱勢。</p></div>';
+  }
+
+  // Crystal + Soul
+  html += '<div class="analysis-card">';
+  html += '<h3>水晶與靈魂課題</h3>';
+  html += '<table class="energy-table"><tr><th>數字</th><th>對應色</th><th>脈輪</th><th>推薦水晶</th><th>靈魂課題</th></tr>';
+  const displayNums = isMaster ? [lifeNum] : [lifeNumber];
+  // Show life number's crystal
+  const ld = NUM_DATA[lifeNum];
+  html += '<tr><td><strong>' + (isMaster ? lifeNumber : lifeNum) + '號（主命）</strong></td><td style="color:' + ld.color + '">' + ld.colorName + '</td><td>' + ld.chakra + '</td><td>' + ld.crystal + '</td><td>' + ld.soul + '</td></tr>';
+  html += '</table></div>';
+
+  // Communication style
+  html += '<div class="analysis-card">';
+  html += '<h3>與 ' + (isMaster ? lifeNumber : lifeNum) + ' 號人的溝通建議</h3>';
+  html += '<p>' + lifeData.comm + '</p>';
+  html += '</div>';
+
+  // Fixed number
+  html += '<div class="analysis-card">';
+  html += '<h3>固定數（生日數）：' + fixed + ' 號</h3>';
+  const fixedDescs = {
+    1: "領導型 — 自信果斷，小心「獨行俠」標籤。",
+    2: "協調型 — 善解人意，需練習說「不」。",
+    3: "魅力型 — 創意社交家，避免過度討好。",
+    4: "穩定型 — 踏實可靠，需警惕「固執己見」的風險。天生具備穩健踏實的精神與優異的組織能力。",
+    5: "冒險型 — 活力四射，應在「自由」與「責任」間找到平衡。天生擁有強烈冒險精神與適應能力。",
+    6: "關懷型 — 溫暖體貼，需學會「尊重」他人獨立性。天生擁有強烈關懷精神與和諧能力。",
+    7: "智慧型 — 深思熟慮，應在追求真理時保持「開放」心態。",
+    8: "權威型 — 果斷專業，需在「成功」與「謙遜」間取得平衡。",
+    9: "理想型 — 博愛包容，應在「理想」與「現實」間找到平衡。"
+  };
+  html += '<p>' + (fixedDescs[fixed] || '') + '</p>';
+  html += '<p style="color:var(--muted);font-size:0.9em;">固定數代表你的<strong>外在行為模式與社交形象</strong>，是別人第一眼看到的你。</p>';
+  html += '</div>';
+
+  content.innerHTML = html;
+
+  // Scroll to analysis
+  setTimeout(() => { section.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  initGrid();
+
+});
+
+// Enter key to calculate
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') calculate();
+});
+
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
