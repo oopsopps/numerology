@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>生命靈數測算 — 輸入生日算出你的命數九宮格</title>
 <meta name="description" content="免費生命靈數計算器。輸入西元生日，即時算出生命靈數、九宮格圈數、連線分析、能量解讀。支援手機安裝。">
-<meta name="theme-color" content="#8b5cf6">
+<meta name="theme-color" content="#E8927C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="生命靈數">
@@ -17,17 +17,19 @@
 <meta property="og:image" content="/icon-512.png">
 <style>
   :root {
-    --bg: #0f0f14;
-    --card: #1a1a24;
-    --accent: #8b5cf6;
-    --accent2: #a78bfa;
-    --text: #e4e4e7;
-    --muted: #9ca3af;
-    --border: #2a2a3a;
-    --warn: #f59e0b;
-    --green: #22c55e;
-    --red: #ef4444;
-    --blue: #3b82f6;
+    --bg: #FAF7F2;
+    --card: #FFFFFF;
+    --accent: #E8927C;
+    --accent2: #D4756A;
+    --text: #3D3A38;
+    --muted: #9B9590;
+    --border: #E8E2DA;
+    --warn: #E8927C;
+    --green: #7BAE7F;
+    --red: #D4756A;
+    --blue: #7BA4C4;
+    --sand: #F0E6D8;
+    --lavender: #C4B5D0;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family: 'Segoe UI', 'Noto Sans TC', sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
@@ -35,19 +37,19 @@
   /* === Calculator Page === */
   .calc-container { max-width:1200px; margin:0 auto; padding:20px; }
   .calc-header { text-align:center; padding:30px 0 20px; }
-  .calc-header h1 { font-size:2em; background:linear-gradient(135deg, var(--accent), #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .calc-header h1 { font-size:2em; color:var(--accent); letter-spacing:0.05em; }
   .calc-header p { color:var(--muted); margin-top:6px; }
 
   .calc-main { display:flex; gap:30px; align-items:flex-start; flex-wrap:wrap; justify-content:center; }
 
   /* Grid panel */
-  .grid-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:30px; min-width:340px; }
+  .grid-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:30px; min-width:340px; box-shadow:0 2px 16px rgba(0,0,0,0.05); }
   .grid-panel h3 { color:var(--accent2); margin-bottom:16px; text-align:center; }
 
   .grid-wrapper { position:relative; width:300px; height:300px; margin:0 auto; }
   .grid-cell { position:absolute; width:80px; height:80px; display:flex; align-items:center; justify-content:center; font-size:1.8em; font-weight:700; color:var(--muted); transition:all .4s; }
   .grid-cell.has-circle { color:var(--text); }
-  .grid-cell .circle-ring { position:absolute; width:74px; height:74px; border-radius:50%; border:3px solid var(--accent); opacity:0; transition:all .4s; }
+  .grid-cell .circle-ring { position:absolute; width:74px; height:74px; border-radius:50%; border:3px solid var(--accent); opacity:0; transition:all .4s; left:50%; top:50%; transform:translate(-50%,-50%); }
   .grid-cell.has-circle .circle-ring { opacity:1; }
   .grid-cell .circle-count { position:absolute; bottom:2px; right:6px; font-size:0.4em; color:var(--accent2); opacity:0; }
   .grid-cell.has-circle .circle-count { opacity:1; }
@@ -60,19 +62,19 @@
   .conn-line.active { opacity:0.7; }
 
   /* Input panel */
-  .input-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:30px; min-width:320px; max-width:400px; }
+  .input-panel { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:30px; min-width:320px; max-width:400px; box-shadow:0 2px 16px rgba(0,0,0,0.05); }
   .input-panel h3 { color:var(--accent2); margin-bottom:16px; }
   .input-row { display:flex; gap:10px; margin-bottom:16px; }
   .input-group { flex:1; }
   .input-group label { display:block; font-size:0.85em; color:var(--muted); margin-bottom:4px; }
-  .input-group input, .input-group select { width:100%; padding:10px 12px; background:#12121a; border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:1em; }
+  .input-group input, .input-group select { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:1em; }
   .input-group input:focus, .input-group select:focus { outline:none; border-color:var(--accent); }
-  .btn-calc { width:100%; padding:14px; background:linear-gradient(135deg, var(--accent), #7c3aed); border:none; border-radius:10px; color:#fff; font-size:1.1em; font-weight:600; cursor:pointer; transition:all .2s; margin-top:8px; }
-  .btn-calc:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(139,92,246,0.4); }
+  .btn-calc { width:100%; padding:14px; background:var(--accent); border:none; border-radius:10px; color:#fff; font-size:1.1em; font-weight:600; cursor:pointer; transition:all .2s; margin-top:8px; }
+  .btn-calc:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(232,146,124,0.35); }
   .btn-calc:active { transform:translateY(0); }
 
-  .info-box { margin-top:16px; padding:14px; background:rgba(139,92,246,0.08); border-radius:10px; font-size:0.9em; }
-  .info-box .info-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .info-box { margin-top:16px; padding:14px; background:var(--sand); border-radius:10px; font-size:0.9em; }
+  .info-box .info-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border); }
   .info-box .info-row:last-child { border-bottom:none; }
   .info-label { color:var(--muted); }
   .info-value { font-weight:600; color:var(--accent2); }
@@ -85,24 +87,24 @@
 
   /* Connections list */
   .conn-list { margin-top:16px; }
-  .conn-tag { display:inline-block; padding:3px 10px; margin:3px; border-radius:20px; font-size:0.82em; background:rgba(139,92,246,0.15); color:var(--accent2); border:1px solid rgba(139,92,246,0.3); }
-  .conn-tag.inactive { background:transparent; color:var(--muted); border-color:var(--border); opacity:0.5; }
+  .conn-tag { display:inline-block; padding:3px 10px; margin:3px; border-radius:20px; font-size:0.82em; background:rgba(232,146,124,0.12); color:var(--accent2); border:1px solid rgba(232,146,124,0.3); }
+  .conn-tag.inactive { background:transparent; color:var(--muted); border-color:var(--border); opacity:0.4; }
 
   /* === Analysis Section === */
   .analysis-section { max-width:1200px; margin:30px auto; padding:0 20px; }
-  .analysis-section h2 { font-size:1.5em; padding:12px 18px; background:linear-gradient(90deg, var(--accent), transparent); border-radius:8px; margin-bottom:20px; }
-  .analysis-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:16px; }
+  .analysis-section h2 { font-size:1.5em; padding:12px 18px; background:var(--sand); color:var(--accent2); border-radius:8px; margin-bottom:20px; }
+  .analysis-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
   .analysis-card h3 { color:var(--accent2); margin-bottom:10px; font-size:1.15em; }
-  .analysis-card h4 { color:#d4d4d8; margin:12px 0 6px; font-size:1em; }
+  .analysis-card h4 { color:var(--text); margin:12px 0 6px; font-size:1em; }
   .energy-table { width:100%; border-collapse:collapse; margin:8px 0; }
   .energy-table th, .energy-table td { padding:8px 12px; border:1px solid var(--border); text-align:left; font-size:0.92em; }
   .energy-table th { background:var(--accent); color:#fff; }
-  .energy-empty { background:rgba(59,130,246,0.1); }
-  .energy-ok { background:rgba(34,197,94,0.1); }
-  .energy-excess { background:rgba(239,68,68,0.1); }
+  .energy-empty { background:rgba(123,164,196,0.1); }
+  .energy-ok { background:rgba(123,174,127,0.1); }
+  .energy-excess { background:rgba(212,117,106,0.1); }
   .tag { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.8em; margin:2px; }
-  .tag-pos { background:#065f46; color:#6ee7b7; }
-  .tag-neg { background:#7f1d1d; color:#fca5a5; }
+  .tag-pos { background:rgba(123,174,127,0.15); color:#4A7A4E; }
+  .tag-neg { background:rgba(212,117,106,0.15); color:#A0524A; }
   .num-badge { display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; border-radius:50%; background:var(--accent); color:#fff; font-weight:700; font-size:1em; margin-right:6px; }
 
   .hidden { display:none !important; }
