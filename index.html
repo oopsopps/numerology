@@ -142,7 +142,9 @@
         <div class="input-row">
           <div class="input-group">
             <label>西元年</label>
-            <input type="number" id="inputYear" min="1900" max="2050" placeholder="1984">
+            <select id="inputYear">
+              <script>for(let i=1900;i<=2100;i++)document.write('<option value="'+i+'"'+(i===1990?' selected':'')+'>'+i+'</option>');</script>
+            </select>
           </div>
           <div class="input-group">
             <label>月</label>
@@ -442,8 +444,8 @@ function calculate() {
   const month = parseInt(document.getElementById('inputMonth').value);
   const day = parseInt(document.getElementById('inputDay').value);
 
-  if (!year || !month || !day || year < 1900 || year > 2050) {
-    alert('請輸入有效的西元生日（1900-2050）');
+  if (!year || !month || !day) {
+    alert('請選擇完整的年、月、日');
     return;
   }
 
